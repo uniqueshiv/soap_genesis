@@ -14,10 +14,10 @@ include_once( get_template_directory() . '/lib/init.php' );
 load_child_theme_textdomain( 'genesis-sample', apply_filters( 'child_theme_textdomain', get_stylesheet_directory() . '/languages', 'genesis-sample' ) );
 
 //* Add Image upload and Color select to WordPress Theme Customizer
-require_once( get_stylesheet_directory() . '/lib/customize.php' );
+//require_once( get_stylesheet_directory() . '/lib/customize.php' );
 
 //* Include Customizer CSS
-include_once( get_stylesheet_directory() . '/lib/output.php' );
+//include_once( get_stylesheet_directory() . '/lib/output.php' );
 
 //* Child theme (do not remove)
 define( 'CHILD_THEME_NAME', 'Soaphub' );
@@ -25,22 +25,32 @@ define( 'CHILD_THEME_URL', 'http://www.soaphub.com' );
 define( 'CHILD_THEME_VERSION', '1.0.0' );
 
 //* Enqueue CSS files
-add_action( 'wp_enqueue_scripts', 'webninjaz_soaphub_enqueue_styles');
+add_action( 'wp_enqueue_scripts', 'webninjaz_soaphub_enqueue_styles',30);
 function webninjaz_soaphub_enqueue_styles() {
-  wp_enqueue_style( 'soaphub-fonts', '//fonts.googleapis.com/css?family=Lato:300,400,700|Montserrat:300,400,500,600,700|Poppins:300,400,500,600', array(), CHILD_THEME_VERSION );
-	//wp_enqueue_style( 'soaphub-lato-fonts', '//fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic', array(), CHILD_THEME_VERSION );
-	//wp_enqueue_style( 'soaphub-gvollkorn-fonts', '//fonts.googleapis.com/css?family=Vollkorn:400italic,700italic,400,700', array(), CHILD_THEME_VERSION );
+  wp_enqueue_style( 'soaphub-fonts', '//fonts.googleapis.com/css?family=Lato|Roboto:300,400,700|Montserrat:300,400,500,600,700|Poppins:300,400,500,600', array(), CHILD_THEME_VERSION );
+	wp_enqueue_style( 'soaphub-themestyle', get_stylesheet_directory_uri().'/css/theme-style.css', array(), CHILD_THEME_VERSION );
 	wp_enqueue_script( 'soaphub-responsive-menu', get_bloginfo( 'stylesheet_directory' ) . '/js/responsive-menu.js', array( 'jquery' ), '1.0.0' );
 	wp_enqueue_style( 'dashicons' );
+  wp_enqueue_script( 'sticky-nav', get_stylesheet_directory_uri() . '/js/sticky-nav.js', array( 'jquery' ), '', true );
   //wp_enqueue_style( 'parent-theme-css', get_template_directory_uri() . '/style.css' );
 
 }
 
 //* Reposition the Primary Navigation Menu
+remove_action( 'genesis_after_header', 'genesis_do_subnav' );
 add_action( 'genesis_before_header', 'genesis_do_nav' );
+remove_action( 'genesis_after_header', 'genesis_do_nav' );
+add_action( 'genesis_before_header', 'genesis_do_subnav' );
 
-// Register and display Footer Navigation Menu
-add_action('genesis_before_footer', 'webninjaz_soaphub_footer_menu', 10);
+// Register and display Footer Navigation Menu and logo
+add_action('genesis_footer','webninjaz_soaphub_logo_menu',10);
+function webninjaz_soaphub_logo_menu(){
+  echo '<a href="'.get_option('siteurl').'" class="logolinkfooter">
+  <img src="https://14684-presscdn-0-33-pagely.netdna-ssl.com/wp-content/uploads/2016/09/SoapHub-logo-final.png" class="logoimg" alt="Soap Hub">
+  </a>';
+}
+
+add_action('genesis_footer', 'webninjaz_soaphub_footer_menu', 10);
 	function webninjaz_soaphub_footer_menu() {
 
 	register_nav_menu( 'footer', 'Footer Navigation Menu' );
@@ -51,11 +61,33 @@ add_action('genesis_before_footer', 'webninjaz_soaphub_footer_menu', 10);
 
 }
 
+// Chnage Style.css down to custom css
+add_action( 'wp_enqueue_scripts', 'generate_remove_scripts' );
+function generate_remove_scripts()
+{
+    wp_dequeue_style( 'generate-child' );
+}
+
+add_action( 'wp_enqueue_scripts', 'generate_move_scripts', 999 );
+function generate_move_scripts()
+{
+    if ( is_child_theme() ) :
+        wp_enqueue_style( 'generate-child', get_stylesheet_uri(), true, filemtime( get_stylesheet_directory() . '/style.css' ), 'all' );
+    endif;
+}
+//mobile menu
+function register_mobile_menu() {
+register_nav_menu( 'mobile-menu' ,__( 'Mobile Navigation Menu' ));
+}
+add_action( 'init', 'register_mobile_menu' );
+
+
 // Add Theme Support for Genesis Menus
 add_theme_support( 'genesis-menus', array(
   'primary'   => __( 'Top Navigation Menu', 'genesis' ),
   'secondary' => __( 'Secondary Navigation Menu', 'genesis' ),
   'footer' => __( 'Footer Navigation Menu', 'genesis' ),
+  'mobile' => __( 'Mobile Navigation Menu', 'genesis' ),
   )
  );
 
@@ -80,7 +112,7 @@ add_theme_support( 'custom-background' );
 add_theme_support( 'genesis-after-entry-widget-area' );
 
 //* Add support for 3-column footer widgets
-add_theme_support( 'genesis-footer-widgets', 3 );
+//add_theme_support( 'genesis-footer-widgets', 3 );
 
 //* Add Image Sizes
 add_image_size( 'featured-image', 720, 400, TRUE );
@@ -141,7 +173,7 @@ function be_nav_menus() {
 	echo '<div class="menus" id="sssss"><div class="primary ssss">';
 	wp_nav_menu( array( 'menu' => 'Primary' ) );
 	echo '</div><!-- .primary --><div class="secondary">';
-	wp_nav_menu( array( 'menu' => 'Secondary' ) );
+	//wp_nav_menu( array( 'menu' => 'Secondary' ) );
 	echo '</div><!-- .secondary --></div><!-- .menus -->';
 
 }
@@ -154,11 +186,11 @@ remove_action( 'genesis_after_header', 'genesis_do_nav' );
 
 function be_search() {
 	?>
-	<div id="searchbar">
+	<!-- <div id="searchbar">
 		<div class="wrap">
 			<p>Can't find what you're looking for? </p> <?php get_search_form(); ?>
 		</div>
-	</div>
+	</div> -->
 	<?php
 }
 
@@ -171,29 +203,63 @@ function be_search_button_text( $text ) {
 	return esc_attr( 'Go' );
 }
 
+// add id to body children
+
+add_filter( 'genesis_attr_content', 'my_attr_content' );
+function my_attr_content( $attr ) {
+
+     $attr['id'] .= 'wrapper';
+     return $attr;
+
+}
 /**
 * Top Section
 *
 */
-add_action( 'genesis_before_header', 'be_header', 4 );
+add_action( 'genesis_before_header', 'add_mobile_nav_genesis' );
+function add_mobile_nav_genesis() {
+  $defaults = array(
+    'theme_location'  => 'mobile-menu',
+    'container'       => 'ul',
+    'container_class' => 'menu-mobile-parent',
+    'container_id'    => 'menu-main',
+    'menu_class'      => 'mobile-menu',
+    'menu_id'         => 'menu-main',
+    'items_wrap'      => '<ul  class="mobile-menu">%3$s</ul>',
+
+    'walker'          =>false
+  );
+echo '<nav id="mobile-menu">
+    <div class="custom_scroll" id="menu-scroll">
+    <div style="transform: translate(0px, 0px) translateZ(0px);">';
+wp_nav_menu( $defaults);
+echo '</div></div></nav>';
+}
+
+add_action( 'genesis_header', 'be_header');
 function be_header() {
-  echo '<div class="wrap"> <div class="left">';
-  wp_nav_menu( array( 'menu' => 'primary' ) );
-  echo '</div>';
-	echo '<div class="right">';
-	wp_nav_menu( array( 'menu' => 'Footer' ) );
-	echo '</div></div>';
+  echo '<span class="dashicons dashicons-search searchbtnheader" id="searchheaderbtn"></span>';
+  echo '<form action="'.get_site_url('site_url').'" method="get" id="searchform">
+        <input type="text" name="s" id="searchinput" style="display:none;" placeholder="Search">
+        </form>';
+  // echo '<div class="wrap"> <div class="left">';
+  // wp_nav_menu( array( 'menu' => 'primary' ) );
+  // echo '</div>';
+	// echo '<div class="right">';
+	// wp_nav_menu( array( 'menu' => 'Footer' ) );
+	// echo '</div></div>';
 }
 /**
  * Footer
  *
  */
-add_action( 'genesis_before_footer', 'be_search', 4 );
+remove_action( 'genesis_footer', 'genesis_do_footer' );
+add_action( 'genesis_after_footer', 'be_footer');
 function be_footer() {
-	echo '<div class="left"><p>© Copyright ' . date('Y') . ' : All Rights Reserved</p></div>';
+	echo '<div class="footer_copyright"><div class="wrap"><div class="left"><p>© Copyright @ 2013-' . date('Y') . ' SoapHub All Rights Reserved</p></div>';
 	echo '<div class="right">';
-	wp_nav_menu( array( 'menu' => 'Footer' ) );
-	echo '</div>';
+	echo '<img style="width:125px;display:inline-block;" src="https://14684-presscdn-0-33-pagely.netdna-ssl.com/wp-content/uploads/2016/09/SoapHub-logo-final.png" class="logoimg" alt="Soap Hub">';
+	echo '</div></div></div>';
 }
 
 //* Register widget areas
@@ -227,16 +293,7 @@ genesis_register_sidebar( array(
 	'name'        => __( 'After Entry', 'soaphub' ),
 	'description' => __( 'This is the after entry widget area.', 'soaphub' ),
 ) );
-genesis_register_sidebar( array(
-	'id'          => 'sub-footer-left',
-	'name'        => __( 'Sub Footer - Left', 'soaphub' ),
-	'description' => __( 'This is the left section of the sub footer.', 'soaphub' ),
-) );
-genesis_register_sidebar( array(
-	'id'          => 'sub-footer-right',
-	'name'        => __( 'Sub Footer - Right', 'soaphub' ),
-	'description' => __( 'This is the right section of the sub footer.', 'soaphub' ),
-) );
+
 
 //cusotm Logo
 
@@ -300,43 +357,4 @@ function custom_add_site_description_class( $attributes ) {
 	}
 
 	return $attributes;
-}
-
-// search idcon
-add_filter( 'genesis_search_button_text', 'wpsites_search_button_icon' );
-function wpsites_search_button_icon( $text ) {
-	return esc_attr( '&#xf179;' );
-}
-
-
-// Add Search to Header Nav
-add_filter( 'wp_nav_menu_items', 'genesis_search_header_nav_menu', 10, 2 );
-function genesis_search_header_nav_menu( $menu, stdClass $args ){
-  if ( 'header' != $args->theme_location )
-    return $menu;
-        if( genesis_get_option( 'nav_extras' ) )
-          return $menu;
-    $menu .= sprintf( '<li id="menu-item-4439205 ssss" class="custom-search menu-item">%s</li>', __( genesis_search_form( $echo ) ) );
-    return $menu;
-}
-
-// Add Social Widget Area for Primay Nav
-genesis_register_sidebar( array(
-	'id'          => 'nav-social-menu',
-	'name'        => __( 'Nav Social Menu' ),
-	'description' => __( 'This is the nav social menu section.' ),
-) );
-// Add Search to Primary Nav
-add_filter( 'wp_nav_menu_items', 'genesis_search_primary_nav_menu', 10, 2 );
-function genesis_search_primary_nav_menu( $menu, stdClass $args ){
-  if ( 'primary' != $args->theme_location )
-    return $menu;
-        if( genesis_get_option( 'nav_extras' ) )
-          return $menu;
-	ob_start();
-	echo '<li id="menu-item-4439203" class="custom-social menu-item">';
-	genesis_widget_area('nav-social-menu');
-	$social = ob_get_clean();
-    $menu_search = sprintf( '%s</li>', __( genesis_search_form( $echo ) ) );
-    return $menu . $social . $menu_search;
 }
